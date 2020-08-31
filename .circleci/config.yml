@@ -1,7 +1,6 @@
 steps:
       
       - run:
-            name: Sample Step Krish
           command: |
             echo "Arbitrary multi-line bash"
             echo "Copy-paste from 'Execute Shell' in Jenkins"
