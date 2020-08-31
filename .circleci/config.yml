@@ -1,4 +1,6 @@
-steps:
+jobs:
+  build:
+    steps:
       
       - run:
           command: |
