@@ -42,11 +42,15 @@ jobs:
             sfdx force:auth:jwt:grant --clientid 3MVG9YDQS5WtC11rrFQR4UBaq6zN69XIhN05KRyh3p9EaENMAom_BZPcBhBWhzPgjrbDvQyYOjr1gRNem8nXN --jwtkeyfile assets/server1.key --username kgkrishnan@myde.learn --setdefaultdevhubusername -a hub
       
       - run:
-          name: Deploy to Target Deployment Org
+          name: convert to MDAPI format
           command: |
             #from SFDX project structure CONVERT TO MDAPI format 
             sfdx force:source:convert -r force-app -d testDeploy
             
+                      
+      - run:
+          name: Deploy to Target Deployment Org
+          command: |
             #Deploy to target deployment org and run unit tests. 
             #sfdx force:mdapi:deploy --wait 10 -d testDeploy --targetusername $HUB_SFDC_USER 
             
