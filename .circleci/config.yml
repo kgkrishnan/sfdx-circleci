@@ -52,7 +52,7 @@ jobs:
           name: Deploy to Target Deployment Org
           command: |
             #Deploy to target deployment org and run unit tests. 
-            #sfdx force:mdapi:deploy --wait 10 -d testDeploy --targetusername $HUB_SFDC_USER 
+            sfdx force:mdapi:deploy --wait 10 -d testDeploy --targetusername $HUB_SFDC_USER 
             
                 
       #- run:
