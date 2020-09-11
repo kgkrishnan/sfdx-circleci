@@ -23,8 +23,7 @@ jobs:
     executor: sfdx/default
     steps:
       - checkout
-      - sfdx/install: 
-         version: 7.73.1
+      - sfdx/install
       - run: 
           name: Check NodeJS version installed
           command: |
