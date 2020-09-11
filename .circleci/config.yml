@@ -7,7 +7,7 @@ general:
 #       - dev # specific branch
 #       - /dev-.*/ # or regexes
 orbs:
-  salesforce-sfdx: circleci/salesforce-sfdx@2.1.0
+  sfdx: circleci/salesforce-sfdx@2.1.0
 jobs:
   build:
     machine: true
