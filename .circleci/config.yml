@@ -1,4 +1,4 @@
-
+version: 2.1
 general:
 # Uncomment the following to specify only a specific branch
 #   branches:
@@ -8,7 +8,7 @@ general:
 orbs:
   sfdx: circleci/salesforce-sfdx@2.1.0
   
-version: 2.1
+
 jobs:
   build:
     machine: true
