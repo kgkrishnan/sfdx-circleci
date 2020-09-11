@@ -1,0 +1,84 @@
+<project name="test" default="diffBuilderWithGitCommit" xmlns:sf="antlib:com.salesforce">
+
+	<property environment="env"/>
+	
+	<!-- The long (40-character) git SHA that is being built. CircleCI's "pipeline.git.revision" pipeline value.
+	Similar to Current GIT Commit : ${env.GIT_COMMIT} of Jenkins  -->
+	
+	<property name="CIRCLECI_PIPELINE_GIT_REVISION"      value=""/>
+	
+	<!-- The long (40-character)previous git revision. CircleCI's "pipeline.git.base_revision" pipeline value.
+	Similar to Previous Known Successful GIT Commit : ${env.GIT_PREVIOUS_SUCCESSFUL_COMMIT} of Jenkins-->
+	
+	<property name="CIRCLECI_PIPELINE_GIT_BASE_REVISION"      value=""/> 
+	
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+			<classpath>
+				<pathelement location="lib/ant-contrib-1.0b3.jar"/>
+			</classpath>
+	</taskdef>
+	<macrodef name="gitDiff">
+			<sequential>
+				<exec executable="git" outputproperty="git.diff">
+					<arg value="diff" />
+					<arg value="--pretty=format:" />
+					<arg value="--name-only" />
+					
+					<!--<arg value="${env.GIT_COMMIT}" />
+					<arg value="${env.GIT_PREVIOUS_SUCCESSFUL_COMMIT}" />-->
+					
+					<arg value="${CIRCLECI_PIPELINE_GIT_REVISION}" />
+					<arg value="${CIRCLECI_PIPELINE_GIT_BASE_REVISION}" />
+				</exec>
+				<echo>${git.diff}</echo>
+			</sequential>
+	</macrodef>
+
+	<target name="diffBuilderWithGitCommit">
+			<delete dir="deploy-sf"/>
+			<mkdir dir="deploy-sf"/>
+			<!--<echo>Current GIT Commit : ${env.GIT_COMMIT}</echo>
+			<echo>Previous Known Successful GIT Commit : ${env.GIT_PREVIOUS_SUCCESSFUL_COMMIT}</echo>-->
+			
+			<echo>Current GIT Commit : ${CIRCLECI_PIPELINE_GIT_REVISION}</echo>
+			<echo>Previous Known Successful GIT Commit : ${CIRCLECI_PIPELINE_GIT_BASE_REVISION}</echo>
+			<gitDiff/>
+			<for list="${git.diff}" param="currentDiff" delimiter="${line.separator}">
+				<sequential>
+					<if>
+						<and>
+							<available file="@{currentDiff}"/>
+							<matches string="@{currentDiff}" pattern="force-app/"/>
+						</and>
+						<then>
+							<propertyregex
+								property="currentDiffWithoutSRC"
+								input="@{currentDiff}"
+								regexp="force-app\/([a-zA-Z$]*\/[a-zA-Z0-9\/\.\_-]*)"
+								select="\1"
+								casesensitive="true" 
+								override="true"
+								defaultValue=""/>
+							<echo>Current Component : ${currentDiffWithoutSRC}</echo>
+							<copy todir="deploy-sf" verbose="false">
+								<fileset dir="force-app">
+									<include name="${currentDiffWithoutSRC}" />
+								</fileset>
+							</copy>
+							<if>
+								<available file="@{currentDiff}-meta.xml"/>
+								<then>
+									<echo>Generating meta-xml : @{currentDiff}</echo>
+									<copy todir="deploy-sf" verbose="false">
+										<fileset dir="force-app">
+											<include name="${currentDiffWithoutSRC}-meta.xml" />
+										</fileset>
+									</copy>
+								</then>
+							</if>
+						</then>
+					</if>
+				</sequential>
+			</for>
+	</target>
+</project>
