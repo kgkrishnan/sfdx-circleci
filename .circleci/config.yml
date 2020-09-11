@@ -21,11 +21,7 @@ jobs:
       - CIRCLECI_PIPELINE_GIT_BASE_REVISION: << pipeline.git.base_revision >>
     steps:
       - checkout
-      - sfdx/install
-          #version: 7.31.2
-          version: 7.73.1
-      #- node/install:
-      #    install-yarn: true
+      - sfdx/install version: 7.73.1
       - run: 
           name: Check NodeJS version installed
           command: |
