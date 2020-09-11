@@ -19,9 +19,11 @@ jobs:
       - DX_CLI_URL: https://developer.salesforce.com/media/salesforce-cli/sfdx-linux-amd64.tar.xz
       - CIRCLECI_PIPELINE_GIT_REVISION: <<pipeline.git.revision>>
       - CIRCLECI_PIPELINE_GIT_BASE_REVISION: << pipeline.git.base_revision >>
+    executor: sfdx/default
     steps:
       - checkout
-      - sfdx/install version: 7.73.1
+      - sfdx/install 
+          version: 7.73.1
       - run: 
           name: Check NodeJS version installed
           command: |
