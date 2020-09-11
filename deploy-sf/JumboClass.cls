@@ -5,7 +5,7 @@ public with sharing class JumboClass {
 
     private Integer returnNumber()
     {
-        Integer x = 45;
+        Integer x = 100;
         return x;
     }
 }
