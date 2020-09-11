@@ -6,8 +6,8 @@ general:
 #     only:
 #       - dev # specific branch
 #       - /dev-.*/ # or regexes
-#orbs:
-#  node: circleci/node@4.0.0
+orbs:
+  node: circleci/node@8.10.0
 jobs:
   build:
     machine: true
@@ -21,8 +21,8 @@ jobs:
       - CIRCLECI_PIPELINE_GIT_BASE_REVISION: << pipeline.git.base_revision >>
     steps:
       - checkout
-      #- node/install:
-      #    install-yarn: true
+      - node/install:
+          install-yarn: true
       - run: 
           name: Check NodeJS version installed
           command: |
