@@ -1,4 +1,3 @@
-version: 2.1
 
 general:
 # Uncomment the following to specify only a specific branch
@@ -8,6 +7,8 @@ general:
 #       - /dev-.*/ # or regexes
 orbs:
   sfdx: circleci/salesforce-sfdx@2.1.0
+  
+version: 2.1
 jobs:
   build:
     machine: true
@@ -23,7 +24,7 @@ jobs:
     steps:
       - checkout
       - sfdx/install 
-         
+         version:7.73.1
       - run: 
           name: Check NodeJS version installed
           command: |
