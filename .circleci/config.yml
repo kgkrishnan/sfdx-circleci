@@ -74,7 +74,8 @@ jobs:
          name: SFDX Source Deploy to Target Deployment Org
          command: |
            #Get changes in deployment source directory  and deploy to target deployment org. run unit tests?? 
-           sfdx force:source:deploy --sourcepath deploy-sf --targetusername kgkrishnan@myde.learn --json --loglevel fatal
+           #sfdx force:source:deploy --sourcepath deploy-sf --targetusername kgkrishnan@myde.learn --json --loglevel fatal
+           sfdx force:source:deploy --sourcepath << pipeline.git.branch >>/deploy-sf --targetusername kgkrishnan@myde.learn --json --loglevel fatal
            
       #- run:
       #    name: convert to MDAPI format
