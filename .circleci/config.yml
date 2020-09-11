@@ -23,7 +23,7 @@ jobs:
     steps:
       - checkout
       - sfdx/install 
-          #version:7.31.2
+         
       - run: 
           name: Check NodeJS version installed
           command: |
