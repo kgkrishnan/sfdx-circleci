@@ -1,0 +1,132 @@
+version: 2.1
+
+general:
+# Uncomment the following to specify only a specific branch
+#   branches:
+#     only:
+#       - dev # specific branch
+#       - /dev-.*/ # or regexes
+
+jobs:
+  build:
+    machine: true
+    working_directory: ~/ci_app
+    environment:
+      # from https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_install_cli_standalone.htm
+      # and https://developer.salesforce.com/media/salesforce-cli/manifest.json
+      - DX_CLI_URL: https://developer.salesforce.com/media/salesforce-cli/sfdx-linux-amd64.tar.xz
+      - CIRCLECI_PIPELINE_GIT_REVISION: <<pipeline.git.revision>>
+      - CIRCLECI_PIPELINE_GIT_BASE_REVISION: << pipeline.git.base_revision >>
+    steps:
+      - checkout
+      - run:
+          name: Download CLI
+          command: |
+            mkdir sfdx
+            wget -qO- $DX_CLI_URL | tar xJ -C sfdx --strip-components 1
+      - run:
+          name: Install CLI
+          command: |
+            ./sfdx/install
+            sfdx
+            mkdir tmp
+      - run:
+          name: Set HEAD in GitHub Repo
+          command: |
+            #Use a Git pull command to set HEAD correctly in Repo. For build.xml to work properly 
+            #below git pull command actually is git pull origin BRANCH NAME from where build is to happen i.e. master/develop/feature etc.
+            git config user.email "bigbrochush@gmail.com"
+            git config user.name "kgkrishnan"
+            #git pull origin develop
+            git pull origin << pipeline.git.branch >>
+                        
+      - run:
+          name: Show CIRCLE_COMPARE_URL values
+          command: |
+            #
+            # echo $CIRCLE_COMPARE_URL
+            echo $CIRCLECI_PIPELINE_GIT_REVISION
+            echo $CIRCLECI_PIPELINE_GIT_BASE_REVISION
+            
+      - run:
+          name: Get Changes For Differential Deploy
+          command: |
+            #Using Ant script copy only changed files(and related metadata files) to a deployment source directory 
+            #ant -lib lib/ -buildfile build.xml
+            #ant -Dmyname = GoKrishGO -Ddistance = 42  -buildfile build-RDLearn.xml
+            ant -lib lib/ -DCIRCLECI_PIPELINE_GIT_REVISION=$CIRCLECI_PIPELINE_GIT_REVISION -DCIRCLECI_PIPELINE_GIT_BASE_REVISION=$CIRCLECI_PIPELINE_GIT_BASE_REVISION  -buildfile build.xml
+          
+      
+      - run:
+          name: Decrypt server key
+          command: |
+            #Decrypt server key
+            openssl enc -nosalt -aes-256-cbc -d -in assets/server.key.enc -out assets/server.key -base64 -K $DECRYPTION_KEY -iv $DECRYPTION_IV
+      
+      - run:
+          name: Authorize Target Deployment Org
+          command: |
+            #Authorize target org
+            #sfdx force:auth:jwt:grant --clientid $HUB_CONSUMER_KEY --jwtkeyfile assets/server1.key --username $HUB_SFDC_USER --setdefaultdevhubusername -a hub
+            sfdx force:auth:jwt:grant --clientid 3MVG9YDQS5WtC11rrFQR4UBaq6zN69XIhN05KRyh3p9EaENMAom_BZPcBhBWhzPgjrbDvQyYOjr1gRNem8nXN --jwtkeyfile assets/server1.key --username kgkrishnan@myde.learn --setdefaultdevhubusername -a hub
+      
+      - run:
+         name: SFDX Source Deploy to Target Deployment Org
+         command: |
+           #Get changes in deployment source directory  and deploy to target deployment org. run unit tests?? 
+           sfdx force:source:deploy --sourcepath deploy-sf --targetusername kgkrishnan@myde.learn --json --loglevel fatal
+           
+      #- run:
+      #    name: convert to MDAPI format
+      #    command: |
+      #      #from SFDX project structure CONVERT TO MDAPI format 
+      #      sfdx force:source:convert -r force-app -d testDeploy
+            
+                      
+      #- run:
+      #    name: Deploy to Target Deployment Org
+      #    command: |
+      #      #Deploy to target deployment org and run unit tests. 
+      #      #sfdx force:mdapi:deploy --wait 10 -d testDeploy --targetusername $HUB_SFDC_USER
+      #      sfdx force:mdapi:deploy --wait 10 -d testDeploy --targetusername kgkrishnan@myde.learn
+            
+                
+      #- run:
+      #    name: Create hub key
+      #    command: |
+      #      echo 'make hub key'
+      #      #- mkdir keys
+      #      #- echo $HUB_SERVER_KEY_HEX | xxd -r -ps >> keys/hub.key
+      #      openssl enc -nosalt -aes-256-cbc -d -in assets/server.key.enc -out assets/server.key -base64 -K $DECRYPTION_KEY -iv $DECRYPTION_IV
+      #      #- openssl rsa -in keys/hub.key -check -noout
+      #    ### Uncomment the following if performing deployments
+      #    #- echo 'make deploy key'
+      #    #- echo $DEPLOY_SERVER_KEY_HEX | xxd -r -ps >> keys/deploy.key
+      #    #- openssl rsa -in keys/deploy.key -check -noout
+      #    #- sfdx force:auth:jwt:grant --clientid $DEPLOY_CONSUMER_KEY --jwtkeyfile keys/deploy.key --username $DEPLOY_SFDC_USER -a deploy
+      #- run:
+      #    name: Setup Org
+      #    command: |
+      #      echo 'Running tests'
+      #      sfdx force:auth:jwt:grant --clientid $HUB_CONSUMER_KEY --jwtkeyfile assets/server.key --username $HUB_SFDC_USER --setdefaultdevhubusername -a hub
+      #      sfdx force --help
+      #      sfdx force:org:create -s -f ~/ci_app/config/project-scratch-def.json -a circle_build_$CIRCLE_BUILD_NUM --wait 2
+      #      sfdx force:source:push -u circle_build_$CIRCLE_BUILD_NUM
+      #- run:
+      #    name: Run Apex Tests
+      #    command: |
+      #      mkdir -p ~/junit
+      #      sfdx force:apex:test:run -c -d ~/junit -r junit --wait 5
+      #- store_test_results:
+      #    path: ~/junit
+      #- run:
+      #    name: Delete Useless Scratch Org
+      #    command: |
+      #      sfdx force:org:delete -u circle_build_$CIRCLE_BUILD_NUM -p
+
+### Uncomment the following if performing deployments
+#deployment:
+#  override:
+#    - sfdx force:source:convert -r force-app -d testDeploy
+#    - . cleanupDeploy.sh
+#    - sfdx force:mdapi:deploy -d testDeploy/ -u deploy -w 2
